@@ -101,7 +101,7 @@ class InstallApp extends Command
         $this->writeEnvFile($config);
 
         $this->generateKey();
-        $this->migrate(($this->getLaravel()->environment() === 'local'));
+        $this->migrate();
 
         $this->repository->updateById($admin, 1);
 
@@ -230,22 +230,13 @@ class InstallApp extends Command
     /**
      * Calls the artisan migrate to set up the database
      * in development mode it also seeds the DB.
-     *
-     * @param bool $seed Whether or not to seed the database
      */
-    protected function migrate($seed = false)
+    protected function migrate()
     {
         $this->info('Running database migrations');
         $this->line('');
         $this->call('migrate', ['--force' => true]);
         $this->line('');
-
-        if ($seed) {
-            $this->info('Seeding database');
-            $this->line('');
-            $this->call('db:seed', ['--force' => true]);
-            $this->line('');
-        }
     }
 
     /**
@@ -594,7 +585,7 @@ class InstallApp extends Command
 
         if (!count($this->getDatabaseDrivers())) {
             $this->error(
-                'At least 1 PDO driver is required. Either sqlite, mysql, pgsql or sqlsrv, check your php.ini file'
+                'At least 1 PDO driver is required. Either sqlite, mysql or pgsql, check your php.ini file'
             );
             $errors = true;
         }
@@ -693,8 +684,7 @@ class InstallApp extends Command
     {
         $available = collect(PDO::getAvailableDrivers());
 
-        return array_values($available->intersect(['mysql', 'sqlite', 'pgsql', 'sqlsrv'])
-                         ->all());
+        return array_values($available->intersect(['mysql', 'sqlite', 'pgsql'])->all());
     }
 
     /**

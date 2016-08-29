@@ -94,7 +94,8 @@ class Project extends ProjectRelation implements PresentableInterface
      *
      * @var array
      */
-    protected $appends = ['group_name', 'webhook_url', 'repository_path', 'repository_url', 'branch_url'];
+    protected $appends = ['application_status', 'heartbeat_status', 'webhook_url',
+                          'repository_path', 'repository_url', 'branch_url', ];
 
     /**
      * The attributes that should be casted to native types.
@@ -270,7 +271,7 @@ class Project extends ProjectRelation implements PresentableInterface
      *
      * @return array
      */
-    public function heartbeatsStatus()
+    public function getHeartbeatStatusAttribute()
     {
         if (empty($this->heartbeatStatus)) {
             $length = count($this->heartbeats);
@@ -282,7 +283,7 @@ class Project extends ProjectRelation implements PresentableInterface
                 }
             }
 
-            $this->heartbeatStatus = ['missed' => $missed, 'length' => $length];
+            $this->heartbeatStatus = ['missed' => $missed, 'total' => $length];
         }
 
         return $this->heartbeatStatus;
@@ -293,7 +294,7 @@ class Project extends ProjectRelation implements PresentableInterface
      *
      * @return array
      */
-    public function applicationCheckUrlStatus()
+    public function getApplicationStatusAttribute()
     {
         if (empty($this->checkurlStatus)) {
             $length = count($this->checkUrls);
@@ -305,20 +306,10 @@ class Project extends ProjectRelation implements PresentableInterface
                 }
             }
 
-            $this->checkurlStatus = ['missed' => $missed, 'length' => $length];
+            $this->checkurlStatus = ['missed' => $missed, 'total' => $length];
         }
 
         return $this->checkurlStatus;
-    }
-
-    /**
-     * Define a accessor for the group name.
-     *
-     * @return string
-     */
-    public function getGroupNameAttribute()
-    {
-        return $this->group->name;
     }
 
     /**
@@ -399,7 +390,7 @@ class Project extends ProjectRelation implements PresentableInterface
     {
         $tags = $this->refs()
                      ->where('is_tag', true)
-                     ->lists('name')
+                     ->pluck('name')
                      ->toArray();
 
         $compare = new VersionCompare;
@@ -427,7 +418,7 @@ class Project extends ProjectRelation implements PresentableInterface
                     ->where('is_tag', false)
                     ->where('name', '<>', $this->branch)
                     ->orderBy('name')
-                    ->lists('name');
+                    ->pluck('name');
     }
 
     /**
